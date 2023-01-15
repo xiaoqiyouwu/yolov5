@@ -4,10 +4,8 @@ PyTorch Hub models https://pytorch.org/hub/ultralytics_yolov5
 
 Usage:
     import torch
-    model = torch.hub.load('ultralytics/yolov5', 'yolov5s')  # official model
-    model = torch.hub.load('ultralytics/yolov5:master', 'yolov5s')  # from branch
-    model = torch.hub.load('ultralytics/yolov5', 'custom', 'yolov5s.pt')  # custom/local model
-    model = torch.hub.load('.', 'custom', 'yolov5s.pt', source='local')  # local repo
+    model = torch.hub.load('ultralytics/yolov5', 'yolov5s')
+    model = torch.hub.load('ultralytics/yolov5:master', 'custom', 'path/to/yolov5s.onnx')  # custom model from branch
 """
 
 import torch
@@ -32,14 +30,14 @@ def _create(name, pretrained=True, channels=3, classes=80, autoshape=True, verbo
 
     from models.common import AutoShape, DetectMultiBackend
     from models.experimental import attempt_load
-    from models.yolo import ClassificationModel, DetectionModel, SegmentationModel
+    from models.yolo import ClassificationModel, DetectionModel
     from utils.downloads import attempt_download
     from utils.general import LOGGER, check_requirements, intersect_dicts, logging
     from utils.torch_utils import select_device
 
     if not verbose:
         LOGGER.setLevel(logging.WARNING)
-    check_requirements(exclude=('opencv-python', 'tensorboard', 'thop'))
+    check_requirements(exclude=('ipython', 'opencv-python', 'tensorboard', 'thop'))
     name = Path(name)
     path = name.with_suffix('.pt') if name.suffix == '' and not name.is_dir() else name  # checkpoint path
     try:
@@ -49,11 +47,8 @@ def _create(name, pretrained=True, channels=3, classes=80, autoshape=True, verbo
                 model = DetectMultiBackend(path, device=device, fuse=autoshape)  # detection model
                 if autoshape:
                     if model.pt and isinstance(model.model, ClassificationModel):
-                        LOGGER.warning('WARNING ⚠️ YOLOv5 ClassificationModel is not yet AutoShape compatible. '
+                        LOGGER.warning('WARNING ⚠️ YOLOv5 v6.2 ClassificationModel is not yet AutoShape compatible. '
                                        'You must pass torch tensors in BCHW to this model, i.e. shape(1,3,224,224).')
-                    elif model.pt and isinstance(model.model, SegmentationModel):
-                        LOGGER.warning('WARNING ⚠️ YOLOv5 SegmentationModel is not yet AutoShape compatible. '
-                                       'You will not be able to run inference with this model.')
                     else:
                         model = AutoShape(model)  # for file/URI/PIL/cv2/np inputs and NMS
             except Exception:
